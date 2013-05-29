@@ -13,7 +13,12 @@ color[][] colors = new color[64][48];
 int index;
 
 /*TODO*/
-// lerpcolor through array when added
+// decode string to color
+// date stamp on filenames to avoid deletion
+
+String playbackdatafile = "";
+String playbackwavefile = "";
+//-----------//
 
 void setup() 
 {
@@ -22,12 +27,7 @@ void setup()
   noStroke();
 
   minim = new Minim(this);
-
   in = minim.getLineIn();
-  // create a recorder that will record from the input to the filename specified, using buffered recording
-  // buffered recording means that all captured audio will be written into a sample buffer
-  // then when save() is called, the contents of the buffer will actually be written to a file
-  // the file will be located in the sketch's root folder.
   recorder = minim.createRecorder(in, "myrecording.wav", true);
 
   ListOfIPs = new HashMap();
@@ -37,7 +37,8 @@ void setup()
     table = createTable();
     table.addColumn();
     table.addColumn();
-    String[] x ={"time","ipaddress"} ;
+    table.addColumn();
+    String[] x ={"time", "time2", "ipaddress"} ;
     table.setColumnTitles( x );
     
     udp = new UDP( this, 6000 );
@@ -46,44 +47,44 @@ void setup()
   }
   else
   {
-     table = loadTable("SOMESTRING", "tsv");
+     table = loadTable(playbackdatafile, "tsv");
   }
   
   prepareExitHandler ();
   recorder.beginRecord();
+  
+  //------------  
+  // TESTS
+  ListOfIPs.put("1.1.1.1", "fadfkjkl");
+  ListOfIPs.put("1.1.1.1", "fadfkjkl");
   colors[0][0] = color(random(255),random(255),random(255)); 
 }
 
-
-
 void draw() 
 { 
-  background(0);
-  
-  fill( colors[0][0] );
+  background(0);  
   int numberOfIPs = max(ListOfIPs.size(),1);
-  
-  /*
-  for (int i = 0; i < numberOfIPs; i++)
-  {
-      rect(width-(frameCount%width),0, 10,height/numberOfIPs);    
-  }
-  */
   
   for ( int i = 0; i < colors.length; i++)
   {
-    fill(colors[i][0]); /// change to index and j counter
-    rect(width-10-(i*10), 0, 10, height/numberOfIPs);
+    for ( int j = 0; j < colors[0].length; j++)
+    {
+      fill(colors[i][j]);
+      rect(width-10-(i*10), j * height/numberOfIPs, 10, height/numberOfIPs);
+    }
+  }
+  // shift the color registers over to simulate scrolling
+  for ( int i = colors.length-1; i > 0; i--)
+  {
+    for ( int j = 0; j < colors[0].length; j++)
+    {
+      colors[i][j] = colors[i-1][j];
+    }    
   }
 }
 
 void stop()
 {  
-    /// test write
-    TableRow newRow = table.addRow();
-    newRow.setInt("time", millis() );
-    newRow.setString("ipaddress", "test" ); 
-    
     saveTable(table, "data.txt", "tsv");
     recorder.endRecord();
     recorder.save();
@@ -98,25 +99,20 @@ void stop()
  * byte[] array), but in addition, two arguments (representing in order the 
  * sender IP address and his port) can be set like below.
  */
-// void receive( byte[] data ) { 			// <-- default handler
-void receive( byte[] data, String ip, int port ) {	// <-- extended handler
-  
-  
-  // get the "real" message =
-  // forget the ";\n" at the end <-- !!! only for a communication with Pd !!!
-  //data = subset(data, 0, data.length-2);
+void receive( byte[] data, String ip, int port ) 
+{	
   String message = new String( data );
   
-   TableRow newRow = table.addRow();
-   newRow.setString(null, ip );
-   newRow.setInt(null, millis() ); 
-  
-  if( null != ListOfIPs.get(ip) )
-  { 
-      ListOfIPs.put(ip,message);
-         
+  TableRow newRow = table.addRow();
+  newRow.setFloat( "time", millis()/1000.0 );
+  newRow.setFloat( "time2", millis()/1000.0 );
+  newRow.setString( "ipaddress", ip + "," + message ); 
+     
+  if( null == ListOfIPs.get(ip) )
+  {
+      ListOfIPs.put(ip,message);         
   }  
-  println( "receive: \""+message+"\" from "+ip+" on port "+port );
+  println( "receive: \"" + message+ "\" from " + ip + " on port " + port );
 }
 
 //https://forum.processing.org/topic/run-code-on-exit
@@ -136,5 +132,15 @@ private void prepareExitHandler ()
     }));
 }   
 
+void keyPressed()
+{
+   String example = "This is an example";
+   byte[] bytes = example.getBytes();
+   
+   if (key == 'r')
+   { 
+      receive(bytes,"1.1.1.10",5894);
+   }
+}
 
 
