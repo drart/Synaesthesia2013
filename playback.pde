@@ -1,15 +1,14 @@
-void received( String ip) 
+void received( String ip ) 
 {  
   String delims = "[,]";
   String[] tokens = ip.split( delims );
-  //println(tokens.length);
   int[] cc = new int[3];
   for (int i = 1; i < tokens.length; i++)
   {
      cc[i-1] =  (int) ( 255 * Float.parseFloat( tokens[i] ) ); 
   } 
   
-  ListOfIPs.add( tokens[0] );
+  ListOfIPs.add( tokens[0] ); // playback stores ip in list
   int currentIPIndex = 0;
   int index = 0;
   for (String s : ListOfIPs )
@@ -44,26 +43,8 @@ void playback()
 }
 
 
-
-//https://forum.processing.org/topic/run-code-on-exit
-// must add "prepareExitHandler();" in setup() for Processing sketches 
-private void prepareExitHandler () 
-{
-  Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
-    public void run () {
-      //System.out.println("SHUTDOWN HOOK");
-      try {
-        stop();
-      } 
-      catch (Exception ex) {
-        ex.printStackTrace(); // not much else to do at this point
-      }
-    }
-  }
-  ));
-}   
-
 /// SOME TESTS
+/*
 void keyPressed()
 {
   String example = "0.12,0.111,0.3123";
@@ -74,3 +55,4 @@ void keyPressed()
     receive(bytes, "1.1.1.1001912", 5894);
   }
 }
+*/

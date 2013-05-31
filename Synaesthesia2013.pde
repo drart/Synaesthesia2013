@@ -1,23 +1,23 @@
 import hypermedia.net.*;
-import java.util.*;
+import java.util.*; // Java Set<> and LinkedHashSet<>
 import ddf.minim.*;
+
+/// set variables to "" for recording or fill in with filenames for playback
+String playbackdatafile = "";
+String playbackwavefile = "";
 
 Minim minim;
 AudioInput in;
 AudioRecorder recorder;
+AudioPlayer player;
 
 UDP udp;  
-//HashMap ListOfIPs;
 Set<String> ListOfIPs;
 Table table;
 color[][] colors = new color[64][48];
 int index;
 int playbackindex;
-
-/*TODO*/
-// decode string to color -- put it in the right part of the array
-String playbackdatafile = "data-5-29-14-53-23.txt";
-String playbackwavefile = "";
+String filewritesuffix = month() + "-" + day() + "-" + hour() + "-"  + minute() + "-" + second();
 
 void setup() 
 {
@@ -26,8 +26,6 @@ void setup()
   noStroke();
 
   minim = new Minim(this);
-  in = minim.getLineIn();
-  recorder = minim.createRecorder(in, "myrecording" + month() + "-" + day() + "-" + hour() + "-"  + minute() + "-" + second() + ".wav", true);
 
   ListOfIPs = new LinkedHashSet();
   
@@ -43,11 +41,16 @@ void setup()
     udp = new UDP( this, 9999 );
     //udp.log( true );     // <-- printout the connection activity
     udp.listen( true );
+    
+    in = minim.getLineIn();
+    recorder = minim.createRecorder(in, "sound-" + filewritesuffix + ".wav", true);
     recorder.beginRecord();
   }
   else
   {
     table = loadTable(playbackdatafile, "header,tsv");
+    player = minim.loadFile(playbackwavefile);
+    player.play();
   }
 
   prepareExitHandler ();
@@ -75,23 +78,31 @@ void draw()
     }
   }
   
-  if (!playbackdatafile.equals(""))
+  int i = 1;
+  for (String s : ListOfIPs )
+  {
+    fill(255);
+    text (s, 30, i * height/numberOfIPs);
+    i++;
+  }
+  
+  if ( !playbackdatafile.equals("") )
     playback();
 }
 
 void stop()
 { 
-  if (!playbackdatafile.equals(""))
+  if ( playbackdatafile.equals("") )
   {
-    saveTable(table, "data-" + month() + "-" + day() + "-" + hour() + "-"  + minute() + "-" + second() + ".txt", "tsv");
+    saveTable(table, "data-" + filewritesuffix + ".txt", "tsv");
     recorder.endRecord();
     recorder.save();
   }
+  
   super.stop();
 }
 
 void receive( byte[] data, String ip, int port ) 
-//void receive( byte[] data )
 {	
   String message = new String( data );
 
@@ -122,3 +133,22 @@ void receive( byte[] data, String ip, int port )
 
   println( "receive: \"" + message+ "\" from " + ip + " on port " + port );
 }
+
+//https://forum.processing.org/topic/run-code-on-exit
+// must add "prepareExitHandler();" in setup() for Processing sketches 
+private void prepareExitHandler () 
+{
+  Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+    public void run () {
+      //System.out.println("SHUTDOWN HOOK");
+      try {
+        stop();
+      } 
+      catch (Exception ex) {
+        ex.printStackTrace(); // not much else to do at this point
+      }
+    }
+  }
+  ));
+}   
+
