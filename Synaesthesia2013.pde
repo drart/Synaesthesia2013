@@ -8,7 +8,7 @@ AudioRecorder recorder;
 
 UDP udp;  
 //HashMap ListOfIPs;
-SortedSet<String> ListOfIPs;
+Set<String> ListOfIPs;
 Table table;
 color[][] colors = new color[64][48];
 int index;
@@ -16,7 +16,7 @@ int playbackindex;
 
 /*TODO*/
 // decode string to color -- put it in the right part of the array
-String playbackdatafile = "";
+String playbackdatafile = "data-5-29-14-53-23.txt";
 String playbackwavefile = "";
 
 void setup() 
@@ -29,8 +29,8 @@ void setup()
   in = minim.getLineIn();
   recorder = minim.createRecorder(in, "myrecording" + month() + "-" + day() + "-" + hour() + "-"  + minute() + "-" + second() + ".wav", true);
 
-  ListOfIPs = new TreeSet();
-
+  ListOfIPs = new LinkedHashSet();
+  
   if (playbackdatafile.equals(""))
   {
     table = createTable();
@@ -43,14 +43,14 @@ void setup()
     udp = new UDP( this, 9999 );
     //udp.log( true );     // <-- printout the connection activity
     udp.listen( true );
+    recorder.beginRecord();
   }
   else
   {
-    table = loadTable(playbackdatafile, "tsv");
+    table = loadTable(playbackdatafile, "header,tsv");
   }
 
   prepareExitHandler ();
-  recorder.beginRecord();
 }
 
 void draw() 
@@ -75,15 +75,18 @@ void draw()
     }
   }
   
-  if (playbackdatafile.equals(""))
+  if (!playbackdatafile.equals(""))
     playback();
 }
 
 void stop()
-{  
-  saveTable(table, "data-" + month() + "-" + day() + "-" + hour() + "-"  + minute() + "-" + second() + ".txt", "tsv");
-  recorder.endRecord();
-  recorder.save();
+{ 
+  if (!playbackdatafile.equals(""))
+  {
+    saveTable(table, "data-" + month() + "-" + day() + "-" + hour() + "-"  + minute() + "-" + second() + ".txt", "tsv");
+    recorder.endRecord();
+    recorder.save();
+  }
   super.stop();
 }
 

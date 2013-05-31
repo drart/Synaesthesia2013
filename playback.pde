@@ -2,10 +2,11 @@ void received( String ip)
 {  
   String delims = "[,]";
   String[] tokens = ip.split( delims );
+  //println(tokens.length);
   int[] cc = new int[3];
   for (int i = 1; i < tokens.length; i++)
   {
-     cc[i] =  (int) ( 255 * Float.parseFloat( tokens[i] ) ); 
+     cc[i-1] =  (int) ( 255 * Float.parseFloat( tokens[i] ) ); 
   } 
   
   ListOfIPs.add( tokens[0] );
@@ -13,11 +14,12 @@ void received( String ip)
   int index = 0;
   for (String s : ListOfIPs )
   {
-     if ( s.equals( ip ) )
+     if ( s.equals( tokens[0] ) )
         currentIPIndex = index; 
       index++;
   }
- 
+  println(ListOfIPs.size() + " " + currentIPIndex );
+
   colors[0][currentIPIndex] = color( cc[0], cc[1], cc[2] );
 
   println( "receive: \"" + ip + "\"" );
@@ -25,7 +27,6 @@ void received( String ip)
 
 void playback()
 {
-  
    if (playbackindex < table.getRowCount() )
    {
      TableRow r = table.getRow(playbackindex);
@@ -33,7 +34,7 @@ void playback()
      r.getFloat("time2");
      String message = r.getString("ipaddress"); // ipaddress stored with colors
      
-     if ( labeltime > millis() )
+     if ( labeltime < millis() )
      {
        received(message); 
        playbackindex++;
